@@ -11,8 +11,7 @@ O projeto visa aplicar técnicas de Estatística Descritiva, Inferencial (Testes
 ## Sumário
 * [Instalação](#instalacao)
 * [Questões](#questões)
-* [Contribuição](#contribuição)
-* [Licença](#licença)
+
 
 # Instalação
 Instalação do R e RStudio
