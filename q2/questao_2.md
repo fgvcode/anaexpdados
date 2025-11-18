@@ -1,9 +1,3 @@
----
-title: "Trabalho Final"
-author: "grupo 1"
-output: html_document
----
-
 
 # Questão 2: 
 Podemos afirmar que o tempo médio de prisão entre homens e mulheres é igual?
@@ -47,3 +41,4 @@ Como o p-valor (0.2147) é **MAIOR** que o nosso nível de significância (0.05)
 
 
 **Resposta:** Não, não podemos afirmar que os tempos médios são iguais. Não há evidência estatística suficiente para rejeitar a hipótese de que o tempo médio de prisão é igual entre homens e mulheres. A pequena diferença vista no gráfico é provavelmente devida ao acaso.
+
