@@ -1,6 +1,6 @@
 # Análise Exploratória de Dados
 
-## Trabalho Final: Análise Estatística e Exploratória com R 
+## Trabalho Final: Análise Estatística e Exploratória com R do grupo 1
 
 Objetivo do Projeto
 
