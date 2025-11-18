@@ -1,18 +1,3 @@
----
-title: "Trabalho Final"
-author: "grupo 1"
-output: html_document
----
-
-
-<br>
-
-```{r setup, include=TRUE}
-# Carregamento da planilha Base_trabalho.xlsx
-
-library(readxl)
-dados <- read_excel("Base_trabalho.xlsx")
-```
 
 # Questão 1: 
 Podemos afirmar que o score médio de periculosidade é superior a 170 pontos?
@@ -68,4 +53,5 @@ Como o p-valor (0.0068) é **menor** que o nível de significância (0.05), **re
 ---
 
 <div style="page-break-after: always;"></div>
+
 
