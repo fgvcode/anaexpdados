@@ -5,18 +5,6 @@ output: html_document
 ---
 
 
-<br>
-
-```{r setup, include=TRUE}
-# Carregamento da planilha Base_trabalho.xlsx
-
-library(readxl)
-dados <- read_excel("Base_trabalho.xlsx")
-```
-
-
-
-
 # Questão 2: 
 Podemos afirmar que o tempo médio de prisão entre homens e mulheres é igual?
 Utilize um nível de significância de 5%. Caso os tempos médios sejam
@@ -56,5 +44,6 @@ t.test(tempo_preso ~ sexo, data = dados, alternative = "two.sided")
 O teste retornou um **p-valor = 0.2147**.
 
 Como o p-valor (0.2147) é **MAIOR** que o nosso nível de significância (0.05), nós **falhamos em rejeitar a Hipótese Nula**.
+
 
 **Resposta:** Não, não podemos afirmar que os tempos médios são iguais. Não há evidência estatística suficiente para rejeitar a hipótese de que o tempo médio de prisão é igual entre homens e mulheres. A pequena diferença vista no gráfico é provavelmente devida ao acaso.
