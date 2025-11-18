@@ -1,7 +1,7 @@
 #################################################################
 # TRABALHO DE PROBABILIDADE E ESTATÍSTICA COM R
 #
-# Script R (documentado) para resolução das Questões 1 
+# Script R (documentado) para resolução da Questão 1 
 #
 # Aluno(s): grupo 1
 #################################################################
@@ -68,6 +68,7 @@ t.test(
 # que o score médio de periculosidade é superior a 170 pontos.
 #
 ################### FIM DA QUESTÃO 1 ###################
+
 
 
 
