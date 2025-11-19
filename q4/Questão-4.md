@@ -1,25 +1,12 @@
-    # 0 - Carregando pacotes necessários
+    #  Carregando pacotes necessários
 
     library(readxl)
     library(dplyr)
-
-    ## 
-    ## Anexando pacote: 'dplyr'
-
-    ## Os seguintes objetos são mascarados por 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## Os seguintes objetos são mascarados por 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
     library(gtsummary)
     library(vcd) 
-
-    ## Carregando pacotes exigidos: grid
-
     library(DescTools)
+    library(knitr)
+    library(rmarkdown)
 
     # Importando e tratando a base de dados
 
@@ -94,13 +81,13 @@
 
     print(tabela_sexo_reincidencia)
 
-    # 3 - Teste Estatístico: Qui-Quadrado de Independência (α = 0,05)
+    # Teste Estatístico: Qui-Quadrado de Independência (α = 0,05)
 
     # Hipóteses:
     # H0: Sexo e Reincidência são independentes (Não há relação)
     # H1: Há associação entre Sexo e Reincidência (Não são independentes) 
 
-    # 3.1. Criar a tabela de contingência (objeto 'table' para o chisq.test)
+    #  Criar a tabela de contingência (objeto 'table' para o chisq.test)
     tab_contingencia <- table(dados$sexo, dados$reincidente)
     print(tab_contingencia)
 
@@ -109,7 +96,7 @@
     ##   Feminino   49  13
     ##   Masculino 113  25
 
-    # 3.2. Calcular estatísticas de associação (inclui Qui-Quadrado, p-valor e Cramer's V)
+    #  Calcular estatísticas de associação (inclui Qui-Quadrado, p-valor e Cramer's V)
     # Esta função é útil para obter o Qui-Quadrado e Cramer's V de forma complementar.
     assocstats(tab_contingencia) 
 
@@ -121,7 +108,7 @@
     ## Contingency Coeff.: 0.034 
     ## Cramer's V        : 0.034
 
-    # 3.3. Executar o Teste Qui-Quadrado de Independência
+    #  Executar o Teste Qui-Quadrado de Independência
     # Usamos 'correct = FALSE' para evitar a Correção de Continuidade de Yates,
     # a menos que as frequências esperadas sejam muito baixas (e a recomendação geral 
     # é que as frequências esperadas Eij > 5 ).
@@ -138,7 +125,7 @@
     ## data:  tab_contingencia
     ## X-squared = 0.22607, df = 1, p-value = 0.6345
 
-    # 4 - Interpretação e Conclusão
+    #  Interpretação e Conclusão
 
     # Como o p-valor (0.6345, conforme resultado anterior) é maior que 0.05,
     # não rejeitamos H0. Concluímos que não há relação estatisticamente significativa
