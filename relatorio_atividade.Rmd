@@ -1,0 +1,269 @@
+---
+title: "Trabalho Final"
+author: "Alexandre Novaes Dornelas  \nJosé Carlos Maria Júnior  \nThiago Itamar Plum  \nWalter Alves Moreira Barbosa dos Santos  \nYgor Silva Nascimento Coelho"
+output: html_document
+---
+
+<br>
+
+# Análise Exploratória de Dados
+
+## Preparação do ambiente e carregamento de bibliotecas
+
+Esse passo é feito uma única vez para todo o script. Destaca-se que, a depender da instalação do usuário, pode ser necessária a instalação de pacotes adicionais. O comando a seguir "ativa" as funções do pacote.
+
+
+```{r imports, echo=TRUE, results="hide", message=F, warning=F}
+library(readxl)
+library(dplyr)      # Manipulação e transformação de dados
+library(ggplot2)    # Visualização de dados
+library(ggpubr)     # Gráficos estatísticos (ex: QQ-plots)
+library(patchwork)  # Combinação de gráficos
+library(naniar)     # Visualização de dados faltantes
+library(visdat)     # Visualização estrutural da base
+library(gtsummary)  # Tabelas descritivas formatadas
+library(epiR)       # Intervalos de confiança e análises epidemiológicas
+library(DescTools)  # Testes estatísticos adicionais
+library(vcd)        # Associação entre variáveis categóricas
+library(car)        # Para VIF (multicolinearidade)
+library(olsrr)      # Para testes de pressupostos (Homocedasticidade)
+```
+
+Em seguida, carregamos a base de dados fornecida para realizar a Análise Exploratória de Dados. A função read_excel() lê o arquivo e o armazena na variável 'dados'. Em seguida, iremos checar que o "tibble" foi carregado corretamente.
+
+
+```{r load_data, echo=TRUE}
+dados <- read_excel("Base_trabalho.xlsx")
+dados
+```
+
+---
+A partir dessa etapa, considera-se a preparação do ambiente terminada.
+---
+
+## Normalização dos Dados
+
+Considerando as colunas que possuem dados numéricos, vamos realizar a padronização e normalização dos dados, convertendo as variáveis binárias para fatores com rótulos.
+
+```{r normalize, echo=TRUE}
+
+dados <- dados |> 
+  mutate(
+    sexo = factor(x = sexo,
+                  levels = c(0, 1), 
+                  labels = c("Masculino", "Feminino")),
+    filhos = factor(x = filhos, 
+                    levels = c(0, 1), 
+                    labels = c("Não", "Sim")),
+    escolaridade = factor(x = escolaridade,
+                          levels = c(1, 2, 3), 
+                          labels = c("Fundamental","Médio", "Superior")),
+    casado = factor(x = casado, 
+                    levels = c(0, 1), 
+                    labels = c("Não", "Sim")),
+    
+    reincidente = factor(x = reincidente, 
+                    levels = c(0, 1), 
+                    labels = c("Não", "Sim"))
+  )
+```
+
+## Verificação do carregamento dos dados
+
+Vamos proceder à verificação preliminar dos nomes das colunas, bem como à sumarização dos dados.
+
+```{r colnames, echo=TRUE}
+names(dados)
+summary(dados)
+```
+
+# Questão 1: 
+
+Podemos afirmar que o score médio de periculosidade é superior a 170 pontos?
+Utilize um nível de significância de 5%. Caso a média seja significativamente
+maior que 170, apresente também o intervalo de confiança de
+95% correspondente.
+
+## 1. Análise Exploratória de Dados (EDA)
+
+Primeiro, verifica-se a distribuição com um histograma.
+
+```{r histograma_q1, echo=TRUE}
+# Histograma
+hist(dados$score_periculosidade, 
+     main="Histograma do Score de Periculosidade", 
+     xlab="Score",
+     col="lightblue", 
+     border="black") 
+```
+
+O histograma mostra uma distribuição aparentemente simétrica. Agora, calcula-se as principais medidas numéricas:
+
+```{r summary_q1, echo=TRUE}
+summary(dados$score_periculosidade)
+```
+
+A média da amostra é 174.52, o que é um indício de que a média real pode ser, sim, superior a 170.
+
+## 2. Teste de Hipótese Formal
+
+Aplicando o Teste t de Student.
+
+* **$H_0$ (Hipótese Nula):** Média $\le$ 170
+* **$H_1$ (Hipótese Alternativa):** Média > 170
+* **Alpha:** 0.05
+
+```{r teste_t_q1, echo=TRUE}
+t.test(
+  dados$score_periculosidade,  
+  mu = 170,                    
+  alternative = "greater"      
+)
+```
+
+## 3. Conclusão da Questão 1
+
+O teste retornou um **p-valor = 0.006845**. 
+
+Como o p-valor (0.0068) é **menor** que o nível de significância (0.05), **rejeita-se a Hipótese Nula**.
+
+> **Resposta:** Sim, existem evidências estatísticas suficientes para afirmar que o score médio de periculosidade é superior a 170 pontos. O intervalo de confiança de 95% reforça esta conclusão.
+
+---
+
+<div style="page-break-after: always;"></div>
+
+# Questão 2: 
+
+Podemos afirmar que o tempo médio de prisão entre homens e mulheres é igual?
+Utilize um nível de significância de 5%. Caso os tempos médios sejam
+significativamente diferentes, apresente o intervalo de confiança de 95% para essa
+diferença.
+
+## 1. Análise Exploratória de Dados
+
+Para comparar os dois grupos (0 = Feminino, 1 = Masculino), usamos um boxplot.
+
+```{r boxplot_q2, echo=TRUE}
+# Boxplot comparativo
+boxplot(tempo_preso ~ sexo, data = dados, 
+        main="Tempo de Prisão por Sexo", 
+        ylab="Tempo de Prisão (dias)",
+        xlab="Sexo (0 = Feminino, 1 = Masculino)",
+        col=c("pink", "lightblue"))
+```
+
+O gráfico mostra que a mediana (linha grossa) do grupo 1 (Masculino) é um pouco mais alta que a do grupo 0 (Feminino), mas as caixas se sobrepõem bastante, o que sugere que a diferença pode não ser significativa.
+
+## 2. Teste de Hipótese Formal
+
+Vamos agora realizar o Teste t formal para duas amostras independentes.
+
+* **$H_0$ (Hipótese Nula):** As médias são iguais ($\mu_F = \mu_M$)
+* **$H_1$ (Hipótese Alternativa):** As médias são diferentes ($\mu_F \neq \mu_M$)
+* **Alpha:** 0.05
+
+```{r teste_t_q2, echo=TRUE}
+# Teste t para duas amostras (o padrão é 'alternative = "two.sided"')
+t.test(tempo_preso ~ sexo, data = dados, alternative = "two.sided")
+```
+
+## 3. Conclusão da Questão 2
+
+O teste retornou um **p-valor = 0.2147**.
+
+Como o p-valor (0.2147) é **MAIOR** que o nosso nível de significância (0.05), nós **falhamos em rejeitar a Hipótese Nula**.
+
+> **Resposta:** Não, não podemos afirmar que os tempos médios são iguais. Não há evidência estatística suficiente para rejeitar a hipótese de que o tempo médio de prisão é igual entre homens e mulheres. A pequena diferença vista no gráfico é provavelmente devida ao acaso.
+
+---
+
+<div style="page-break-after: always;"></div>
+
+# Questão 3: 
+
+Existe correlação entre o tempo de prisão e o score de periculosidade? Utilize um nível de significância de 5% e apresente o valor do coeficiente de correlação.
+
+## 1. Visualização da normalidade para 'tempo_preso'
+
+```{r ggqqplot, echo=TRUE}
+qq1 <- ggqqplot(dados$tempo_preso)
+```
+
+## 2. Visualização da normalidade para 'score_periculosidade'
+
+```{r ggqqplot2, echo=TRUE}
+qq2 <- ggqqplot(dados$score_periculosidade)
+```
+
+## 3. Exibição conjunta
+
+```{r ggqqplot3, echo=TRUE}
+qq1 + qq2
+```
+
+## 4. Teste formal de Shapiro-Wilk para 'tempo_preso'
+
+```{r shapiro_q3, echo=TRUE}
+shapiro.test(x = dados$tempo_preso)
+```
+
+## 5. Teste formal de Shapiro-Wilk para 'score_periculosidade'
+
+```{r shapiro_q4, echo=TRUE}
+shapiro.test(x = dados$score_periculosidade)
+``` 
+
+## 6. Interpretação:
+
+* Tempo de Prisão: O p-valor (0.4003) é maior que o nível de significância de 0.05. Portanto, não rejeitamos a Hipótese Nula ($H_0$).
+
+> **Concluímos que não há evidência estatística de que a variável tempo_preso se afaste da normalidade.**
+
+* Score de Periculosidade: O p-valor (0.7738) também é maior que 0.05. Não rejeitamos a $H_0$, indicando que é razoável assumir que o score_periculosidade possui distribuição aproximadamente normal.
+
+> **Como ambas as variáveis se aproximam da distribuição normal, o teste de correlação de *Pearson* é o procedimento estatistico adequado.**
+
+## 7. Definição do teste de correlação
+
+### 7.1. Gráfico de dispersão para avaliar a relação visualmente
+
+```{r ggplot_aval, echo=TRUE}
+ggplot(data = dados,
+       mapping = aes(x = tempo_preso,
+                     y = score_periculosidade)) +
+  geom_point() +
+  labs(y = "Score de Periculosidade", x = "Tempo de Prisão (meses)") +
+  theme_minimal()
+```
+
+### 7.2. Estimativa pontual do coeficiente de correlação (r)
+
+```{r r_amostral, echo=TRUE}
+r_amostral <- cor(x = dados$tempo_preso,
+                  y = dados$score_periculosidade,
+                  use = "pairwise.complete.obs")
+print(r_amostral)
+```
+
+### 7.3. Teste de Correlação de Pearson (bilateral)
+
+```{r cor_test, echo=TRUE}
+cor.test(x = dados$tempo_preso,
+         y = dados$score_periculosidade,
+         method = "pearson",
+         alternative = "two.sided",
+         conf.level = 0.95)
+```
+
+## 8. Conclusão da Questão 3
+
+O valor do coeficiente de correlação de Pearson é de aproximadamente 0.804. O teste de hipóteses ($H_0$ : P=0) foi rejeitado, pois o p-valor (<2.2e-16) foi inferior ao nível de significância adotado ($\alpha$=0.05). A correlação é forte e positiva, indicando que um tempo de prisão mais longo está significativamente associado a um score de periculosidade mais elevado. Portanto,
+
+> **Resposta:** Sim, existe correlação estatisticamente entre tempo de prisão e o score de periculosidade
+
+---
+
+<div style="page-break-after: always;"></div>
+
+# Questão 4: 
