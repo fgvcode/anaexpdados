@@ -1,6 +1,6 @@
 ### Questão 5 - Ajuste um modelo de regressão para o score de periculosidade, considerando todas as variáveis explicativas disponíveis. Avalie as suposições de normalidade e homoscedasticidade dos resíduos e interprete os coeficientes estimados. Qual o percentual de explicação do modelo? Utilize um nível de significância de 5%.
 
-# Questão 5: Modelo de Regressão Múltipla Completo
+## Questão 5: Modelo de Regressão Múltipla Completo
 
 Esta seção detalha o ajuste, a avaliação dos pressupostos e a interpretação do modelo de regressão linear múltipla, utilizando todas as variáveis preditoras disponíveis para explicar o **score de periculosidade**.
 
