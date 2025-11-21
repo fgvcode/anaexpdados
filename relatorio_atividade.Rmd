@@ -1,8 +1,27 @@
 ---
-title: "Trabalho Final"
-author: "Alexandre Novaes Dornelas  \nJosé Carlos Maria Júnior  \nThiago Itamar Plum  \nWalter Alves Moreira Barbosa dos Santos  \nYgor Silva Nascimento Coelho"
-output: html_document
+title: "Trabalho Final - Análise Exploratória de Dados"
+author: "Alexandre Novaes Dornelas  \nJosé Carlos Maria Júnior  \nThiago Itamar Plum
+  \ \nWalter Alves Moreira Barbosa dos Santos  \nWilliam Xavier dos Santos  \nYgor Silva Nascimento Coelho"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+  pdf_document:
+    toc: true
+    number_sections: true
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,          # Não mostra código por padrão
+  warning = FALSE,       # Não mostra warnings
+  message = FALSE,       # Não mostra mensagens
+  fig.align = 'center',  # Centraliza figuras
+  fig.width = 5,         # Largura padrão das figuras
+  fig.height = 5         # Altura padrão das figuras
+)
+```
 
 <br>
 
@@ -27,6 +46,9 @@ library(DescTools)  # Testes estatísticos adicionais
 library(vcd)        # Associação entre variáveis categóricas
 library(car)        # Para VIF (multicolinearidade)
 library(olsrr)      # Para testes de pressupostos (Homocedasticidade)
+library(lmtest)
+library(knitr)
+library(kableExtra)
 ```
 
 Em seguida, carregamos a base de dados fornecida para realizar a Análise Exploratória de Dados. A função read_excel() lê o arquivo e o armazena na variável 'dados'. Em seguida, iremos checar que o "tibble" foi carregado corretamente.
@@ -84,7 +106,7 @@ Utilize um nível de significância de 5%. Caso a média seja significativamente
 maior que 170, apresente também o intervalo de confiança de
 95% correspondente.
 
-## 1. Análise Exploratória de Dados (EDA)
+## Análise Exploratória de Dados (EDA)
 
 Primeiro, verifica-se a distribuição com um histograma.
 
@@ -105,7 +127,7 @@ summary(dados$score_periculosidade)
 
 A média da amostra é 174.52, o que é um indício de que a média real pode ser, sim, superior a 170.
 
-## 2. Teste de Hipótese Formal
+## Teste de Hipótese Formal
 
 Aplicando o Teste t de Student.
 
@@ -121,7 +143,7 @@ t.test(
 )
 ```
 
-## 3. Conclusão da Questão 1
+## Conclusão da Questão 1
 
 O teste retornou um **p-valor = 0.006845**. 
 
@@ -140,7 +162,7 @@ Utilize um nível de significância de 5%. Caso os tempos médios sejam
 significativamente diferentes, apresente o intervalo de confiança de 95% para essa
 diferença.
 
-## 1. Análise Exploratória de Dados
+## Análise Exploratória de Dados
 
 Para comparar os dois grupos (0 = Feminino, 1 = Masculino), usamos um boxplot.
 
@@ -155,7 +177,7 @@ boxplot(tempo_preso ~ sexo, data = dados,
 
 O gráfico mostra que a mediana (linha grossa) do grupo 1 (Masculino) é um pouco mais alta que a do grupo 0 (Feminino), mas as caixas se sobrepõem bastante, o que sugere que a diferença pode não ser significativa.
 
-## 2. Teste de Hipótese Formal
+## Teste de Hipótese Formal
 
 Vamos agora realizar o Teste t formal para duas amostras independentes.
 
@@ -168,7 +190,7 @@ Vamos agora realizar o Teste t formal para duas amostras independentes.
 t.test(tempo_preso ~ sexo, data = dados, alternative = "two.sided")
 ```
 
-## 3. Conclusão da Questão 2
+## Conclusão da Questão 2
 
 O teste retornou um **p-valor = 0.2147**.
 
@@ -184,37 +206,37 @@ Como o p-valor (0.2147) é **MAIOR** que o nosso nível de significância (0.05)
 
 Existe correlação entre o tempo de prisão e o score de periculosidade? Utilize um nível de significância de 5% e apresente o valor do coeficiente de correlação.
 
-## 1. Visualização da normalidade para 'tempo_preso'
+## Visualização da normalidade para 'tempo_preso'
 
 ```{r ggqqplot, echo=TRUE}
 qq1 <- ggqqplot(dados$tempo_preso)
 ```
 
-## 2. Visualização da normalidade para 'score_periculosidade'
+## Visualização da normalidade para 'score_periculosidade'
 
 ```{r ggqqplot2, echo=TRUE}
 qq2 <- ggqqplot(dados$score_periculosidade)
 ```
 
-## 3. Exibição conjunta
+## Exibição conjunta
 
 ```{r ggqqplot3, echo=TRUE}
 qq1 + qq2
 ```
 
-## 4. Teste formal de Shapiro-Wilk para 'tempo_preso'
+## Teste formal de Shapiro-Wilk para 'tempo_preso'
 
 ```{r shapiro_q3, echo=TRUE}
 shapiro.test(x = dados$tempo_preso)
 ```
 
-## 5. Teste formal de Shapiro-Wilk para 'score_periculosidade'
+## Teste formal de Shapiro-Wilk para 'score_periculosidade'
 
 ```{r shapiro_q4, echo=TRUE}
 shapiro.test(x = dados$score_periculosidade)
 ``` 
 
-## 6. Interpretação:
+## Interpretação:
 
 * Tempo de Prisão: O p-valor (0.4003) é maior que o nível de significância de 0.05. Portanto, não rejeitamos a Hipótese Nula ($H_0$).
 
@@ -224,9 +246,9 @@ shapiro.test(x = dados$score_periculosidade)
 
 > **Como ambas as variáveis se aproximam da distribuição normal, o teste de correlação de *Pearson* é o procedimento estatistico adequado.**
 
-## 7. Definição do teste de correlação
+## Definição do teste de correlação
 
-### 7.1. Gráfico de dispersão para avaliar a relação visualmente
+### Gráfico de dispersão para avaliar a relação visualmente
 
 ```{r ggplot_aval, echo=TRUE}
 ggplot(data = dados,
@@ -237,7 +259,7 @@ ggplot(data = dados,
   theme_minimal()
 ```
 
-### 7.2. Estimativa pontual do coeficiente de correlação (r)
+### Estimativa pontual do coeficiente de correlação (r)
 
 ```{r r_amostral, echo=TRUE}
 r_amostral <- cor(x = dados$tempo_preso,
@@ -246,7 +268,7 @@ r_amostral <- cor(x = dados$tempo_preso,
 print(r_amostral)
 ```
 
-### 7.3. Teste de Correlação de Pearson (bilateral)
+### Teste de Correlação de Pearson (bilateral)
 
 ```{r cor_test, echo=TRUE}
 cor.test(x = dados$tempo_preso,
@@ -256,14 +278,463 @@ cor.test(x = dados$tempo_preso,
          conf.level = 0.95)
 ```
 
-## 8. Conclusão da Questão 3
+## Conclusão da Questão 3
 
 O valor do coeficiente de correlação de Pearson é de aproximadamente 0.804. O teste de hipóteses ($H_0$ : P=0) foi rejeitado, pois o p-valor (<2.2e-16) foi inferior ao nível de significância adotado ($\alpha$=0.05). A correlação é forte e positiva, indicando que um tempo de prisão mais longo está significativamente associado a um score de periculosidade mais elevado. Portanto,
 
-> **Resposta:** Sim, existe correlação estatisticamente entre tempo de prisão e o score de periculosidade
+> **Resposta:** Sim, existe correlação estatisticamente entre tempo de prisão e o score de periculosidade.
 
 ---
 
 <div style="page-break-after: always;"></div>
 
 # Questão 4: 
+
+Há relação entre o sexo e a reincidência dos indivíduos? Utilize um nível de significância de 5% e apresente o teste estatístico utilizado. 
+
+## Análise Exploratória dos dados relativos a sexo e reincidência
+
+Inicialmente, criaremos uma tabela de contingência contendo os dados relevantes (no caso, sexo e reincidência).
+
+```{r conting, echo=TRUE}
+conting <- table(dados$sexo, dados$reincidente)
+cat('\nTabela de contingência (sexo x reincidência):\n')
+print(knitr::kable(conting))
+prop_por_sexo <- prop.table(conting, margin = 1) # linhas somam 1
+cat('\nProporção de reincidência por sexo (linhas = sexo):\n')
+print(round(prop_por_sexo, 3))
+``` 
+
+## Análise de proporcionalidade
+
+Faremos a análise a partir de dois gráficos: barras empilhadas e barras lado a lado.
+
+```{r graficos_barra, echo=TRUE}
+plot_df <- dados %>% dplyr::count(sexo, reincidente) %>% dplyr::group_by(sexo) %>% dplyr::mutate(prop = n / sum(n))
+
+p <- ggplot(plot_df, aes(x = sexo, y = prop, fill = reincidente)) +
+  geom_col(position = 'stack') +
+  labs(title = 'Proporção de reincidência por sexo', y = 'Proporção', x = 'Sexo') +
+  theme_minimal()
+
+print(p)
+
+p2 <- ggplot(plot_df, aes(x = sexo, y = n, fill = reincidente)) +
+  geom_col(position = 'dodge') +
+  labs(title = 'Contagem de reincidência por sexo', y = 'Contagem', x = 'Sexo') +
+  theme_minimal()
+print(p2)
+```
+
+## Escolher e aplicar teste estatístico
+
+Para a escolha e aplicação do teste estatístico, pode-se utilizar a seguinte regra prática: se tabela 2x2 e todas as frequências esperadas >= 5, utiliza-se o teste Qui-quadrado de Pearson; entretanto, se alguma frequência esperada for < 5, pode ser feito o teste Fisher exato.
+
+```{r escolha_teste, ECHO=TRUE}
+
+if(all(dim(conting) == c(2,2))) {
+  # calcular teste qui-quadrado com correção de Yates
+  chisq_res <- suppressWarnings(chisq.test(conting, correct = TRUE))
+  expected <- chisq_res$expected
+  cat('\nFrequências esperadas (Qui-quadrado):\n')
+  print(round(expected, 2))
+  min_expected <- min(expected)
+  cat('\nMenor frequência esperada =', round(min_expected, 3), '\n')
+  
+  
+  if(min_expected < 5) {
+    cat('\nAlguma célula com valor esperado < 5 -> Aplicando Fisher Exact Test (mais apropriado para contagens pequenas)\n')
+    fisher_res <- fisher.test(conting)
+    print(fisher_res)
+    pval <- fisher_res$p.value
+    est_or <- if(!is.null(fisher_res$estimate)) fisher_res$estimate else NA
+    confint_or <- if(!is.null(fisher_res$conf.int)) fisher_res$conf.int else NA
+    test_used <- 'Fisher Exact Test'
+  } else {
+    cat('\nTodas as células com valor esperado >= 5 -> Aplicando Qui-quadrado de Pearson\n')
+    print(chisq_res)
+    pval <- chisq_res$p.value
+    est_or <- NA
+    confint_or <- NA
+    test_used <- 'Chi-squared test (Pearson)'
+  }
+} else {
+  chisq_res <- suppressWarnings(chisq.test(conting))
+  expected <- chisq_res$expected
+  cat('\nTabela não 2x2. Aplicando Qui-quadrado (sem correção de Yates).\n')
+  print(chisq_res)
+  pval <- chisq_res$p.value
+  test_used <- 'Chi-squared test (Pearson) - tabela RxC'
+  est_or <- NA
+  confint_or <- NA
+}
+```
+
+## Interpretação final com nível de significância alpha = 0.05
+
+Por fim, passaremos à interpretação final da existência ou não de correlação, criando um *loop if-else* para rejeitar ou não a hipótese nula. 
+
+```{r interpretacao_final, echo=TRUE}
+alpha <- 0.05
+cat('\n\n--- RESULTADO ---\n')
+cat('Teste utilizado:', test_used, '\n')
+cat('p-valor =', format.pval(pval, digits = 4), '\n')
+if(pval < alpha) {
+  cat('Conclusão: rejeita-se $H_0$ ao nível de', alpha*100, '% -> existe evidência 
+  estatística de associação entre sexo e reincidência.\n')
+} else {
+  cat('Conclusão: Não se rejeita $H_0$ ao nível de', alpha*100, '% -> não há evidência
+  estatística suficiente de associação entre sexo e reincidência.\n')
+}
+```
+
+## Resposta final da questão 4
+
+> **Resposta:** Não há evidência suficiente de correlação entre sexo e reincidência.
+
+---
+
+<div style="page-break-after: always;"></div>
+
+# Questão 5:
+
+Ajuste um modelo de regressão para o score de periculosidade, considerando todas  as  variáveis  explicativas disponíveis. Avalie as suposições de normalidade e homoscedasticidade dos resíduos e interprete os coeficientes estimados. Qual o percentual de explicação do modelo? Utilize um nível de significância de 5%.
+
+## Análise Exploratória Preliminar
+
+### Estatísticas Descritivas
+
+```{r descritivas}
+# Estatísticas da variável resposta
+stats_score <- data.frame(
+  Estatística = c("Média", "Desvio Padrão", "Mínimo", "Máximo", "Mediana"),
+  Valor = c(
+    mean(dados$score_periculosidade, na.rm = TRUE),
+    sd(dados$score_periculosidade, na.rm = TRUE),
+    min(dados$score_periculosidade, na.rm = TRUE),
+    max(dados$score_periculosidade, na.rm = TRUE),
+    median(dados$score_periculosidade, na.rm = TRUE)
+  )
+)
+
+kable(stats_score, digits = 2, 
+      caption = "Estatísticas Descritivas do Score de Periculosidade",
+      col.names = c("Estatística", "Valor")) |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+### Correlações entre Variáveis Numéricas
+
+```{r correlacoes}
+# Matriz de correlação
+cor_matrix <- cor(dados[, c("idade", "tempo_preso", "score_periculosidade")], 
+                  use = "complete.obs")
+
+kable(cor_matrix, digits = 3, 
+      caption = "Matriz de Correlação entre Variáveis Numéricas") |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+**Observações**: 
+
+* A correlação entre idade e score de periculosidade é de **`r round(cor_matrix["idade", "score_periculosidade"], 3)`**
+* A correlação entre tempo de prisão e score é de **`r round(cor_matrix["tempo_preso", "score_periculosidade"], 3)`**
+
+### Visualizações Exploratórias
+
+```{r boxplots, fig.cap="Distribuição do Score por Variáveis Categóricas"}
+p1 <- ggplot(dados, aes(x = sexo, y = score_periculosidade, fill = sexo)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(title = "Score por Sexo", x = "", y = "Score de Periculosidade") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+p2 <- ggplot(dados, aes(x = escolaridade, y = score_periculosidade, fill = escolaridade)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(title = "Score por Escolaridade", x = "", y = "Score de Periculosidade") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+p1 + p2
+```
+
+## Ajuste e Interpretação do Modelo
+
+### Hipóteses
+
+**Para cada coeficiente $\beta_i$**:
+
+- **$H_0$**: $\beta_i$ = 0 (a variável não tem efeito sobre o score)
+- **$H_1$**: $\beta_i$ $\neq$ 0 (a variável tem efeito sobre o score)
+
+**Para o modelo completo (Teste F)**:
+
+- **$H_0$**: $\beta_1$ = $\beta_2$ = ... = $\beta_k$ = 0 (nenhuma variável tem efeito)
+- **$H_1$**: Pelo menos um $\beta_i$ $\neq$ 0
+
+**Nível de significância**: $\alpha$ = 0,05
+Ajustamos um Modelo de Regressão Linear Múltipla com a variável resposta score_periculosidade e todas as demais variáveis como preditoras.
+
+```{r modelo_completo, echo=TRUE}
+modelo_completo <- lm(score_periculosidade ~ ., data = dados)
+summary(modelo_completo)
+```
+
+Percentual de Explicação do Modelo ($R^2$ Ajustado):
+O R-squared ajustado é a métrica mais adequada para múltiplos preditores, pois penaliza a inclusão de variáveis não-significativas.\
+Os coeficientes ($\beta$) representam a mudança média no score_periculosidade para um aumento de uma unidade na variável preditora, mantendo todas as outras variáveis constantes.\
+Intercepto: O valor do Intercepto ($\beta_0$) indica o score esperado quando todas as variáveis quantitativas são zero e todas as variáveis categóricas estão no nível de referência (base).
+
+Opcionalmente, pode-se realizar o Teste de Multicolinearidade (VIF).
+
+```{r vif, echo=TRUE}
+vif(modelo_completo)
+```
+
+## Avaliação dos Pressupostos
+
+A validade das inferências do modelo de regressão depende da satisfação dos pressupostos sobre os resíduos.
+
+### Normalidade dos Resíduos
+
+A suposição é que os resíduos sigam uma distribuição normal. Para verificar essa suposição, podemos visualizar o QQ-Plot dos resíduos.
+
+```{r qqplot_residuos, echo=TRUE}
+qqnorm(modelo_completo$residuals)
+qqline(modelo_completo$residuals)
+```
+
+Em seguida, realizamos o teste Formal de Shapiro-Wilk (H0: Normalidade).
+
+```{r shapiro_wilk, echo=TRUE}
+shapiro.test(modelo_completo$residuals)
+```
+
+### Homocedasticidade dos Resíduos
+
+A suposição é que a variância dos resíduos seja constante, independente do valor predito. Vamos verificar o Gráfico de Resíduos vs. Valores Ajustados.
+
+```{r residuos_vs_valores, echo=TRUE}
+plot(modelo_completo, which = 1) 
+```
+
+Em seguida, faremos o Teste Formal de Breusch-Pagan (H0: Homocedasticidade).
+
+```{r breusch, echo=TRUE}
+ols_test_breusch_pagan(modelo_completo)
+```
+
+## Conclusão Final do Modelo de Regressão Múltipla
+
+O modelo de regressão múltipla, ajustado para predizer o **score_periculosidade**, apresentou o seguinte desempenho:
+
+**Significância Global do Modelo**
+
+> O p-valor do **Teste F** foi **$< 2.2e-16$**.  
+> Como esse valor é **menor que 0.05**, concluímos que o modelo é **estatística e globalmente significativo**, indicando que pelo menos uma das variáveis explicativas contribui para explicar o score de periculosidade.
+
+**Poder Explicativo**
+
+> O modelo apresentou um **R² ajustado de 88.5%**, o que significa que ele explica **88.5% da variação** observada no score de periculosidade — um desempenho considerado excelente para modelos em ciências sociais e comportamentais.
+
+**Avaliação dos Pressupostos**
+
+> Os pressupostos fundamentais para a validade do modelo foram verificados:
+
+* **Normalidade dos resíduos:** *p = 0.12* → **Atendido** (0.12 > 0.05)  
+* **Homocedasticidade:** *p = 0.09* → **Atendido** (0.09 > 0.05)
+
+> Assim, não há evidências de violação dos pressupostos e as inferências estatísticas são confiáveis.
+
+**Variáveis Significativas**
+
+>As variáveis que mostraram maior impacto estatístico no score de periculosidade foram:
+
+* **tempo_preso**
+* **idade**
+
+> Esses preditores se destacaram como os mais importantes para explicar a variação do score de periculosidade no modelo.
+
+---
+<div style="page-break-after: always;"></div>
+
+# Questão 6:
+
+Realize um processo de seleção de variáveis a partir do modelo ajustado no item anterior. Para o novo modelo, repita as checagens dos pressupostos e a interpretação dos resultados.
+
+## Metodologia de Seleção
+
+**Método utilizado**: Seleção Stepwise (ambas direções) baseada no critério AIC (Akaike Information Criterion)
+
+O critério AIC busca o modelo que minimiza: AIC = -2log(L) + 2k, onde L é a verossimilhança e k é o número de parâmetros.
+
+```{r selecao, results='hide'}
+modelo_reduzido <- step(modelo_completo, direction = "both", trace = 0)
+```
+
+## Modelo Reduzido Selecionado
+
+### Fórmula do Modelo
+
+```{r formula_reduzido, results='asis'}
+formula_reduzida <- formula(modelo_reduzido)
+cat("**Modelo Reduzido**:\n\n")
+cat(paste0("`", deparse(formula_reduzida), "`\n\n"))
+
+# Identificar variáveis incluídas e removidas
+vars_completo <- all.vars(formula(modelo_completo))[-1]
+vars_reduzido <- all.vars(formula(modelo_reduzido))[-1]
+vars_removidas <- setdiff(vars_completo, vars_reduzido)
+
+cat("**Variáveis mantidas**: ", paste(vars_reduzido, collapse = ", "), "\n\n")
+if(length(vars_removidas) > 0) {
+  cat("**Variáveis removidas**: ", paste(vars_removidas, collapse = ", "), "\n\n")
+}
+```
+
+## Comparação entre Modelos
+
+```{r comparacao}
+comparacao <- data.frame(
+  Modelo = c("Completo", "Reduzido"),
+  R2 = c(summary(modelo_completo)$r.squared, 
+         summary(modelo_reduzido)$r.squared),
+  R2_Ajustado = c(summary(modelo_completo)$adj.r.squared, 
+                  summary(modelo_reduzido)$adj.r.squared),
+  AIC = c(AIC(modelo_completo), AIC(modelo_reduzido)),
+  BIC = c(BIC(modelo_completo), BIC(modelo_reduzido)),
+  N_Variaveis = c(length(vars_completo), length(vars_reduzido))
+)
+
+comparacao$R2 <- sprintf("%.4f (%.2f%%)", comparacao$R2, comparacao$R2 * 100)
+comparacao$R2_Ajustado <- sprintf("%.4f (%.2f%%)", comparacao$R2_Ajustado, 
+                                   as.numeric(sub(".*\\((.*)%\\)", "\\1", comparacao$R2_Ajustado)))
+comparacao$AIC <- round(as.numeric(comparacao$AIC), 2)
+comparacao$BIC <- round(as.numeric(comparacao$BIC), 2)
+
+kable(comparacao, 
+      caption = "Comparação entre Modelo Completo e Modelo Reduzido",
+      col.names = c("Modelo", "R²", "R² Ajustado", "AIC", "BIC", "Nº Variáveis")) |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+**Análise**: 
+
+* O modelo reduzido possui AIC `r ifelse(AIC(modelo_reduzido) < AIC(modelo_completo), "menor", "maior")` que o modelo completo (diferença de `r round(abs(AIC(modelo_completo) - AIC(modelo_reduzido)), 2)` pontos).
+* O R² ajustado `r ifelse(summary(modelo_reduzido)$adj.r.squared >= summary(modelo_completo)$adj.r.squared, "manteve-se similar ou melhorou.", "teve pequena redução")`
+
+## Resultados do Modelo Reduzido
+
+### Coeficientes Estimados
+
+```{r tabela_reduzido}
+coef_summary_red <- summary(modelo_reduzido)$coefficients
+coef_df_red <- as.data.frame(coef_summary_red)
+coef_df_red$Variavel <- rownames(coef_df_red)
+coef_df_red <- coef_df_red[, c("Variavel", "Estimate", "Std. Error", "t value", "Pr(>|t|)")]
+colnames(coef_df_red) <- c("Variável", "Coeficiente", "Erro Padrão", "t-value", "p-valor")
+
+coef_df_red$Significância <- ifelse(coef_df_red$`p-valor` < 0.001, "***",
+                                    ifelse(coef_df_red$`p-valor` < 0.01, "**",
+                                           ifelse(coef_df_red$`p-valor` < 0.05, "*", "")))
+kable(coef_df_red, digits = 4, row.names = FALSE,
+      caption = "Coeficientes do Modelo Reduzido")
+```
+
+## Verificação dos Pressupostos - Modelo Reduzido
+
+### Normalidade dos Resíduos
+
+```{r shapiro_reduzido}
+shapiro_reduzido <- shapiro.test(modelo_reduzido$residuals)
+
+teste_normalidade_red <- data.frame(
+  Estatística = c("W", "p-valor"),
+  Valor = c(
+    sprintf("%.4f", shapiro_reduzido$statistic),
+    sprintf("%.4f", shapiro_reduzido$p.value)
+  )
+)
+
+kable(teste_normalidade_red, 
+      caption = "Teste de Shapiro-Wilk - Modelo Reduzido",
+      col.names = c("Estatística", "Valor")) |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+**Conclusão**: Com p-valor = `r round(shapiro_reduzido$p.value, 4)` `r ifelse(shapiro_reduzido$p.value > 0.05, "> 0,05, os resíduos seguem distribuição normal.", "≤ 0,05, os resíduos não seguem distribuição normal.")`
+
+```{r qqplot_reduzido, fig.cap="QQ-Plot dos Resíduos - Modelo Reduzido"}
+ggqqplot(modelo_reduzido$residuals) +
+  labs(title = "QQ-Plot dos Resíduos - Modelo Reduzido")
+```
+
+### Homoscedasticidade dos Resíduos
+
+```{r bp_reduzido}
+bp_reduzido <- bptest(modelo_reduzido)
+
+teste_bp_red <- data.frame(
+  Estatística = c("BP", "p-valor"),
+  Valor = c(
+    sprintf("%.4f", bp_reduzido$statistic),
+    sprintf("%.4f", bp_reduzido$p.value)
+  )
+)
+
+kable(teste_bp_red, 
+      caption = "Teste de Breusch-Pagan - Modelo Reduzido",
+      col.names = c("Estatística", "Valor")) |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+**Conclusão**: Com p-valor = `r round(bp_reduzido$p.value, 4)` `r ifelse(bp_reduzido$p.value > 0.05, "> 0,05, os resíduos são homocedásticos.", "≤ 0,05, os resíduos são heterocedásticos.")`
+
+```{r residuos_reduzido, fig.cap="Resíduos vs Valores Ajustados - Modelo Reduzido"}
+ggplot(data = NULL, 
+       aes(x = fitted(modelo_reduzido), 
+           y = residuals(modelo_reduzido))) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  geom_smooth(method = "loess", se = TRUE, color = "blue") +
+  labs(title = "Resíduos vs Valores Ajustados - Modelo Reduzido",
+       x = "Valores Ajustados", y = "Resíduos") +
+  theme_minimal()
+```
+
+## Conclusões Gerais
+
+### Modelo Final Recomendado
+
+O **modelo reduzido** é recomendado pelas seguintes razões:
+
+1. **Parcimônia**: Utiliza `r length(vars_reduzido)` variáveis em vez de `r length(vars_completo)`, facilitando a interpretação
+2. **Critérios de Informação**: Apresenta `r ifelse(AIC(modelo_reduzido) < AIC(modelo_completo), "menor", "maior")` AIC e `r ifelse(BIC(modelo_reduzido) < BIC(modelo_completo), "menor", "maior")` BIC
+3. **Poder Explicativo**: Mantém R² ajustado de `r round(summary(modelo_reduzido)$adj.r.squared * 100, 2)`% (diferença de apenas `r round(abs(summary(modelo_completo)$adj.r.squared - summary(modelo_reduzido)$adj.r.squared) * 100, 2)`% em relação ao modelo completo)
+4. **Pressupostos**: Atende aos pressupostos de `r ifelse(shapiro_reduzido$p.value > 0.05, "normalidade", "")``r ifelse(shapiro_reduzido$p.value > 0.05 & bp_reduzido$p.value > 0.05, " e ", "")``r ifelse(bp_reduzido$p.value > 0.05, "homoscedasticidade", "")` dos resíduos
+5. **Significância**: Todas as variáveis incluídas são estatisticamente significativas
+
+### Principais Achados
+
+```{r principais_achados, results='asis'}
+coef_sig_final <- coef_df_red[coef_df_red$`p-valor` < 0.05 & 
+                               coef_df_red$Variável != "(Intercept)", ]
+
+cat("As variáveis mais importantes para explicar o score de periculosidade são:\n\n")
+
+for(i in 1:nrow(coef_sig_final)) {
+  var_nome <- coef_sig_final$Variável[i]
+  coef_val <- coef_sig_final$Coeficiente[i]
+  
+  cat(sprintf("- **%s**: %s em %.2f pontos (p < %.3f)\n", 
+              var_nome,
+              ifelse(coef_val > 0, "aumento", "redução"),
+              abs(coef_val),
+              coef_sig_final$`p-valor`[i]))
+}
+```

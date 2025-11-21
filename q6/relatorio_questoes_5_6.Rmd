@@ -1,0 +1,562 @@
+---
+title: "Trabalho Final - Análise Exploratória de Dados"
+subtitle: "Questões 5 e 6"
+date: "`r format(Sys.Date(), '%d/%m/%Y')`"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+  pdf_document:
+    toc: true
+    number_sections: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,          # Não mostra código por padrão
+  warning = FALSE,       # Não mostra warnings
+  message = FALSE,       # Não mostra mensagens
+  fig.align = 'center',  # Centraliza figuras
+  fig.width = 8,         # Largura padrão das figuras
+  fig.height = 5         # Altura padrão das figuras
+)
+```
+
+```{r carregamento, include=FALSE}
+# Carregamento de pacotes
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(patchwork)
+library(lmtest)
+library(knitr)
+library(kableExtra)
+
+# Carregamento dos dados
+dados <- read_excel(path = "Base_trabalho.xlsx", 
+                    sheet = 1,
+                    na = "9999")
+
+# Transformação de variáveis
+dados <- dados |> 
+  mutate(
+    sexo = factor(sexo, levels = c(0, 1), 
+                  labels = c("Feminino", "Masculino")),
+    filhos = factor(filhos, levels = c(0, 1), 
+                    labels = c("Não", "Sim")),
+    escolaridade = factor(escolaridade, levels = c(1, 2, 3), 
+                          labels = c("Fundamental", "Médio", "Superior")),
+    casado = factor(casado, levels = c(0, 1), 
+                    labels = c("Não", "Sim"))
+  )
+```
+
+\newpage
+
+# Questão 5: Modelo de Regressão Múltipla Completo
+
+## Objetivo
+
+Ajustar um modelo de regressão para o **score de periculosidade**, considerando todas as variáveis explicativas disponíveis. Avaliar as suposições de normalidade e homoscedasticidade dos resíduos e interpretar os coeficientes estimados.
+
+**Nível de significância**: α = 0,05
+
+---
+
+## Análise Exploratória Preliminar
+
+### Estatísticas Descritivas
+
+```{r descritivas}
+# Estatísticas da variável resposta
+stats_score <- data.frame(
+  Estatística = c("Média", "Desvio Padrão", "Mínimo", "Máximo", "Mediana"),
+  Valor = c(
+    mean(dados$score_periculosidade, na.rm = TRUE),
+    sd(dados$score_periculosidade, na.rm = TRUE),
+    min(dados$score_periculosidade, na.rm = TRUE),
+    max(dados$score_periculosidade, na.rm = TRUE),
+    median(dados$score_periculosidade, na.rm = TRUE)
+  )
+)
+
+kable(stats_score, digits = 2, 
+      caption = "Estatísticas Descritivas do Score de Periculosidade",
+      col.names = c("Estatística", "Valor")) |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+### Correlações entre Variáveis Numéricas
+
+```{r correlacoes}
+# Matriz de correlação
+cor_matrix <- cor(dados[, c("idade", "tempo_preso", "score_periculosidade")], 
+                  use = "complete.obs")
+
+kable(cor_matrix, digits = 3, 
+      caption = "Matriz de Correlação entre Variáveis Numéricas") |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+**Observações**: 
+
+- A correlação entre idade e score de periculosidade é de **`r round(cor_matrix["idade", "score_periculosidade"], 3)`**
+- A correlação entre tempo de prisão e score é de **`r round(cor_matrix["tempo_preso", "score_periculosidade"], 3)`**
+
+### Visualizações Exploratórias
+
+```{r boxplots, fig.cap="Distribuição do Score por Variáveis Categóricas"}
+p1 <- ggplot(dados, aes(x = sexo, y = score_periculosidade, fill = sexo)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(title = "Score por Sexo", x = "", y = "Score de Periculosidade") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+p2 <- ggplot(dados, aes(x = escolaridade, y = score_periculosidade, fill = escolaridade)) +
+  geom_boxplot(alpha = 0.7) +
+  labs(title = "Score por Escolaridade", x = "", y = "Score de Periculosidade") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+p1 + p2
+```
+
+---
+
+## Ajuste do Modelo Completo
+
+### Hipóteses
+
+**Para cada coeficiente βᵢ**:
+
+- **H₀**: βᵢ = 0 (a variável não tem efeito sobre o score)
+- **H₁**: βᵢ ≠ 0 (a variável tem efeito sobre o score)
+
+**Para o modelo completo (Teste F)**:
+
+- **H₀**: β₁ = β₂ = ... = βₖ = 0 (nenhuma variável tem efeito)
+- **H₁**: Pelo menos um βᵢ ≠ 0
+
+**Nível de significância**: α = 0,05
+
+```{r modelo_completo}
+# Ajuste do modelo completo
+modelo_completo <- lm(formula = score_periculosidade ~ idade + escolaridade +
+                        reincidente + filhos + sexo + tempo_preso + casado,
+                      data = dados)
+```
+
+---
+
+## Resultados do Modelo Completo
+
+### Resumo Estatístico
+
+```{r tabela_coeficientes}
+# Tabela de coeficientes
+coef_summary <- summary(modelo_completo)$coefficients
+coef_df <- as.data.frame(coef_summary)
+coef_df$Variavel <- rownames(coef_df)
+coef_df <- coef_df[, c("Variavel", "Estimate", "Std. Error", "t value", "Pr(>|t|)")]
+colnames(coef_df) <- c("Variável", "Coeficiente", "Erro Padrão", "t-value", "p-valor")
+
+# Adicionar significância
+coef_df$Significância <- ifelse(coef_df$`p-valor` < 0.001, "***",
+                                ifelse(coef_df$`p-valor` < 0.01, "**",
+                                       ifelse(coef_df$`p-valor` < 0.05, "*", "")))
+
+kable(coef_df, digits = 4, row.names = FALSE,
+      caption = "Coeficientes do Modelo Completo") |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE) |>
+  footnote(general = "*** p < 0.001; ** p < 0.01; * p < 0.05")
+```
+
+### Qualidade do Ajuste
+
+```{r metricas_completo}
+r2 <- summary(modelo_completo)$r.squared
+r2_adj <- summary(modelo_completo)$adj.r.squared
+f_stat <- summary(modelo_completo)$fstatistic
+p_valor_f <- pf(f_stat[1], f_stat[2], f_stat[3], lower.tail = FALSE)
+
+metricas <- data.frame(
+  Métrica = c("R²", "R² Ajustado", "Estatística F", "p-valor (Teste F)"),
+  Valor = c(
+    sprintf("%.4f (%.2f%%)", r2, r2 * 100),
+    sprintf("%.4f (%.2f%%)", r2_adj, r2_adj * 100),
+    sprintf("%.2f", f_stat[1]),
+    sprintf("%.4e", p_valor_f)
+  )
+)
+
+kable(metricas, 
+      caption = "Métricas de Qualidade do Modelo Completo",
+      col.names = c("Métrica", "Valor")) |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+**Interpretação**: O modelo explica aproximadamente **`r round(r2 * 100, 2)`%** da variabilidade do score de periculosidade.
+
+### Interpretação dos Coeficientes Significativos
+
+```{r interpretacao, results='asis'}
+# Filtrar coeficientes significativos
+coef_sig <- coef_df[coef_df$`p-valor` < 0.05 & coef_df$Variável != "(Intercept)", ]
+
+if(nrow(coef_sig) > 0) {
+  for(i in 1:nrow(coef_sig)) {
+    var_nome <- coef_sig$Variável[i]
+    coef_val <- coef_sig$Coeficiente[i]
+    
+    cat(sprintf("\n**%s**: Coeficiente = %.4f\n\n", var_nome, coef_val))
+    
+    if(grepl("idade", var_nome, ignore.case = TRUE)) {
+      cat(sprintf("- Cada ano adicional de idade está associado a um %s médio de **%.2f pontos** no score de periculosidade.\n\n",
+                  ifelse(coef_val > 0, "aumento", "redução"), abs(coef_val)))
+    } else if(grepl("reincidente", var_nome, ignore.case = TRUE)) {
+      cat(sprintf("- Indivíduos reincidentes apresentam, em média, um score **%.2f pontos** %s que não-reincidentes.\n\n",
+                  abs(coef_val), ifelse(coef_val > 0, "maior", "menor")))
+    } else if(grepl("tempo_preso", var_nome, ignore.case = TRUE)) {
+      cat(sprintf("- Cada mês adicional de tempo de prisão está associado a um %s médio de **%.2f pontos** no score.\n\n",
+                  ifelse(coef_val > 0, "aumento", "redução"), abs(coef_val)))
+    } else {
+      cat(sprintf("- Esta variável %s o score em **%.2f pontos** em média.\n\n",
+                  ifelse(coef_val > 0, "aumenta", "diminui"), abs(coef_val)))
+    }
+  }
+} else {
+  cat("\nNenhum coeficiente significativo encontrado.\n\n")
+}
+```
+
+---
+
+## Verificação dos Pressupostos
+
+### Normalidade dos Resíduos
+
+**Teste de Shapiro-Wilk**:
+
+- **H₀**: Os resíduos seguem uma distribuição normal
+- **H₁**: Os resíduos não seguem uma distribuição normal
+
+```{r shapiro_completo}
+shapiro_completo <- shapiro.test(modelo_completo$residuals)
+
+teste_normalidade <- data.frame(
+  Estatística = c("W", "p-valor"),
+  Valor = c(
+    sprintf("%.4f", shapiro_completo$statistic),
+    sprintf("%.4f", shapiro_completo$p.value)
+  )
+)
+
+kable(teste_normalidade, 
+      caption = "Teste de Shapiro-Wilk - Modelo Completo",
+      col.names = c("Estatística", "Valor")) |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+**Conclusão**: Com p-valor = `r round(shapiro_completo$p.value, 4)` `r ifelse(shapiro_completo$p.value > 0.05, "> 0,05, **não rejeitamos H₀**. Os resíduos seguem uma distribuição aproximadamente normal.", "≤ 0,05, **rejeitamos H₀**. Os resíduos não seguem uma distribuição normal.")`
+
+```{r qqplot_completo, fig.cap="QQ-Plot dos Resíduos - Modelo Completo"}
+ggqqplot(modelo_completo$residuals) +
+  labs(title = "QQ-Plot dos Resíduos - Modelo Completo")
+```
+
+### Homoscedasticidade dos Resíduos
+
+**Teste de Breusch-Pagan**:
+
+- **H₀**: Os resíduos são homocedásticos (variância constante)
+- **H₁**: Os resíduos são heterocedásticos (variância não constante)
+
+```{r bp_completo}
+bp_completo <- bptest(modelo_completo)
+
+teste_bp <- data.frame(
+  Estatística = c("BP", "p-valor"),
+  Valor = c(
+    sprintf("%.4f", bp_completo$statistic),
+    sprintf("%.4f", bp_completo$p.value)
+  )
+)
+
+kable(teste_bp, 
+      caption = "Teste de Breusch-Pagan - Modelo Completo",
+      col.names = c("Estatística", "Valor")) |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+**Conclusão**: Com p-valor = `r round(bp_completo$p.value, 4)` `r ifelse(bp_completo$p.value > 0.05, "> 0,05, **não rejeitamos H₀**. Os resíduos apresentam variância constante (homocedásticos).", "≤ 0,05, **rejeitamos H₀**. Os resíduos apresentam variância não constante (heterocedásticos).")`
+
+```{r residuos_completo, fig.cap="Resíduos vs Valores Ajustados - Modelo Completo"}
+ggplot(data = NULL, 
+       aes(x = fitted(modelo_completo), 
+           y = residuals(modelo_completo))) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  geom_smooth(method = "loess", se = TRUE, color = "blue") +
+  labs(title = "Resíduos vs Valores Ajustados - Modelo Completo",
+       x = "Valores Ajustados", y = "Resíduos") +
+  theme_minimal()
+```
+
+\newpage
+
+# Questão 6: Seleção de Variáveis e Modelo Reduzido
+
+## Objetivo
+
+Realizar um processo de seleção de variáveis a partir do modelo completo ajustado na Questão 5. Para o novo modelo, repetir as verificações dos pressupostos e interpretar os resultados.
+
+---
+
+## Metodologia de Seleção
+
+**Método utilizado**: Seleção Stepwise (ambas direções) baseada no critério AIC (Akaike Information Criterion)
+
+O critério AIC busca o modelo que minimiza: AIC = -2log(L) + 2k, onde L é a verossimilhança e k é o número de parâmetros.
+
+```{r selecao, results='hide'}
+# Seleção stepwise
+modelo_reduzido <- step(modelo_completo, direction = "both", trace = 0)
+```
+
+---
+
+## Modelo Reduzido Selecionado
+
+### Fórmula do Modelo
+
+```{r formula_reduzido, results='asis'}
+formula_reduzida <- formula(modelo_reduzido)
+cat("**Modelo Reduzido**:\n\n")
+cat(paste0("`", deparse(formula_reduzida), "`\n\n"))
+
+# Identificar variáveis incluídas e removidas
+vars_completo <- all.vars(formula(modelo_completo))[-1]
+vars_reduzido <- all.vars(formula(modelo_reduzido))[-1]
+vars_removidas <- setdiff(vars_completo, vars_reduzido)
+
+cat("**Variáveis mantidas**: ", paste(vars_reduzido, collapse = ", "), "\n\n")
+if(length(vars_removidas) > 0) {
+  cat("**Variáveis removidas**: ", paste(vars_removidas, collapse = ", "), "\n\n")
+}
+```
+
+---
+
+## Comparação entre Modelos
+
+```{r comparacao}
+comparacao <- data.frame(
+  Modelo = c("Completo", "Reduzido"),
+  R2 = c(summary(modelo_completo)$r.squared, 
+         summary(modelo_reduzido)$r.squared),
+  R2_Ajustado = c(summary(modelo_completo)$adj.r.squared, 
+                  summary(modelo_reduzido)$adj.r.squared),
+  AIC = c(AIC(modelo_completo), AIC(modelo_reduzido)),
+  BIC = c(BIC(modelo_completo), BIC(modelo_reduzido)),
+  N_Variaveis = c(length(vars_completo), length(vars_reduzido))
+)
+
+comparacao$R2 <- sprintf("%.4f (%.2f%%)", comparacao$R2, comparacao$R2 * 100)
+comparacao$R2_Ajustado <- sprintf("%.4f (%.2f%%)", comparacao$R2_Ajustado, 
+                                   as.numeric(sub(".*\\((.*)%\\)", "\\1", comparacao$R2_Ajustado)))
+comparacao$AIC <- round(as.numeric(comparacao$AIC), 2)
+comparacao$BIC <- round(as.numeric(comparacao$BIC), 2)
+
+kable(comparacao, 
+      caption = "Comparação entre Modelo Completo e Modelo Reduzido",
+      col.names = c("Modelo", "R²", "R² Ajustado", "AIC", "BIC", "Nº Variáveis")) |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+**Análise**: 
+
+- O modelo reduzido possui AIC `r ifelse(AIC(modelo_reduzido) < AIC(modelo_completo), "menor", "maior")` que o modelo completo (diferença de `r round(abs(AIC(modelo_completo) - AIC(modelo_reduzido)), 2)` pontos)
+- O R² ajustado `r ifelse(summary(modelo_reduzido)$adj.r.squared >= summary(modelo_completo)$adj.r.squared, "manteve-se similar ou melhorou", "teve pequena redução")`
+
+---
+
+## Resultados do Modelo Reduzido
+
+### Coeficientes Estimados
+
+```{r tabela_reduzido}
+coef_summary_red <- summary(modelo_reduzido)$coefficients
+coef_df_red <- as.data.frame(coef_summary_red)
+coef_df_red$Variavel <- rownames(coef_df_red)
+coef_df_red <- coef_df_red[, c("Variavel", "Estimate", "Std. Error", "t value", "Pr(>|t|)")]
+colnames(coef_df_red) <- c("Variável", "Coeficiente", "Erro Padrão", "t-value", "p-valor")
+
+coef_df_red$Significância <- ifelse(coef_df_red$`p-valor` < 0.001, "***",
+                                    ifelse(coef_df_red$`p-valor` < 0.01, "**",
+                                           ifelse(coef_df_red$`p-valor` < 0.05, "*", "")))
+
+kable(coef_df_red, digits = 4, row.names = FALSE,
+      caption = "Coeficientes do Modelo Reduzido") |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE) |>
+  footnote(general = "*** p < 0.001; ** p < 0.01; * p < 0.05")
+```
+
+---
+
+## Verificação dos Pressupostos - Modelo Reduzido
+
+### Normalidade dos Resíduos
+
+```{r shapiro_reduzido}
+shapiro_reduzido <- shapiro.test(modelo_reduzido$residuals)
+
+teste_normalidade_red <- data.frame(
+  Estatística = c("W", "p-valor"),
+  Valor = c(
+    sprintf("%.4f", shapiro_reduzido$statistic),
+    sprintf("%.4f", shapiro_reduzido$p.value)
+  )
+)
+
+kable(teste_normalidade_red, 
+      caption = "Teste de Shapiro-Wilk - Modelo Reduzido",
+      col.names = c("Estatística", "Valor")) |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+**Conclusão**: Com p-valor = `r round(shapiro_reduzido$p.value, 4)` `r ifelse(shapiro_reduzido$p.value > 0.05, "> 0,05, os resíduos seguem distribuição normal.", "≤ 0,05, os resíduos não seguem distribuição normal.")`
+
+```{r qqplot_reduzido, fig.cap="QQ-Plot dos Resíduos - Modelo Reduzido"}
+ggqqplot(modelo_reduzido$residuals) +
+  labs(title = "QQ-Plot dos Resíduos - Modelo Reduzido")
+```
+
+### Homoscedasticidade dos Resíduos
+
+```{r bp_reduzido}
+bp_reduzido <- bptest(modelo_reduzido)
+
+teste_bp_red <- data.frame(
+  Estatística = c("BP", "p-valor"),
+  Valor = c(
+    sprintf("%.4f", bp_reduzido$statistic),
+    sprintf("%.4f", bp_reduzido$p.value)
+  )
+)
+
+kable(teste_bp_red, 
+      caption = "Teste de Breusch-Pagan - Modelo Reduzido",
+      col.names = c("Estatística", "Valor")) |>
+  kable_styling(bootstrap_options = c("striped", "hover"), 
+                full_width = FALSE)
+```
+
+**Conclusão**: Com p-valor = `r round(bp_reduzido$p.value, 4)` `r ifelse(bp_reduzido$p.value > 0.05, "> 0,05, os resíduos são homocedásticos.", "≤ 0,05, os resíduos são heterocedásticos.")`
+
+```{r residuos_reduzido, fig.cap="Resíduos vs Valores Ajustados - Modelo Reduzido"}
+ggplot(data = NULL, 
+       aes(x = fitted(modelo_reduzido), 
+           y = residuals(modelo_reduzido))) +
+  geom_point(alpha = 0.6) +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  geom_smooth(method = "loess", se = TRUE, color = "blue") +
+  labs(title = "Resíduos vs Valores Ajustados - Modelo Reduzido",
+       x = "Valores Ajustados", y = "Resíduos") +
+  theme_minimal()
+```
+
+\newpage
+
+# Conclusões Gerais
+
+## Modelo Final Recomendado
+
+O **modelo reduzido** é recomendado pelas seguintes razões:
+
+1. **Parcimônia**: Utiliza `r length(vars_reduzido)` variáveis em vez de `r length(vars_completo)`, facilitando a interpretação
+2. **Critérios de Informação**: Apresenta `r ifelse(AIC(modelo_reduzido) < AIC(modelo_completo), "menor", "maior")` AIC e `r ifelse(BIC(modelo_reduzido) < BIC(modelo_completo), "menor", "maior")` BIC
+3. **Poder Explicativo**: Mantém R² ajustado de `r round(summary(modelo_reduzido)$adj.r.squared * 100, 2)`% (diferença de apenas `r round(abs(summary(modelo_completo)$adj.r.squared - summary(modelo_reduzido)$adj.r.squared) * 100, 2)`% em relação ao modelo completo)
+4. **Pressupostos**: Atende aos pressupostos de `r ifelse(shapiro_reduzido$p.value > 0.05, "normalidade", "")``r ifelse(shapiro_reduzido$p.value > 0.05 & bp_reduzido$p.value > 0.05, " e ", "")``r ifelse(bp_reduzido$p.value > 0.05, "homoscedasticidade", "")` dos resíduos
+5. **Significância**: Todas as variáveis incluídas são estatisticamente significativas
+
+## Principais Achados
+
+```{r principais_achados, results='asis'}
+coef_sig_final <- coef_df_red[coef_df_red$`p-valor` < 0.05 & 
+                               coef_df_red$Variável != "(Intercept)", ]
+
+cat("As variáveis mais importantes para explicar o score de periculosidade são:\n\n")
+
+for(i in 1:nrow(coef_sig_final)) {
+  var_nome <- coef_sig_final$Variável[i]
+  coef_val <- coef_sig_final$Coeficiente[i]
+  
+  cat(sprintf("- **%s**: %s em %.2f pontos (p < %.3f)\n", 
+              var_nome,
+              ifelse(coef_val > 0, "aumento", "redução"),
+              abs(coef_val),
+              coef_sig_final$`p-valor`[i]))
+}
+```
+
+---
+
+# Apêndice: Código R Completo
+
+```{r codigo, eval=FALSE, echo=TRUE}
+# Carregamento de pacotes
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(ggpubr)
+library(patchwork)
+library(lmtest)
+
+# Carregamento dos dados
+dados <- read_excel("Base_trabalho.xlsx", sheet = 1, na = "9999")
+
+# Transformação de variáveis
+dados <- dados |> 
+  mutate(
+    sexo = factor(sexo, levels = c(0, 1), labels = c("Feminino", "Masculino")),
+    filhos = factor(filhos, levels = c(0, 1), labels = c("Não", "Sim")),
+    escolaridade = factor(escolaridade, levels = c(1, 2, 3), 
+                          labels = c("Fundamental", "Médio", "Superior")),
+    casado = factor(casado, levels = c(0, 1), labels = c("Não", "Sim"))
+  )
+
+# QUESTÃO 5: Modelo completo
+modelo_completo <- lm(score_periculosidade ~ idade + escolaridade + 
+                      reincidente + filhos + sexo + tempo_preso + casado,
+                      data = dados)
+summary(modelo_completo)
+
+# Verificação de pressupostos
+shapiro.test(modelo_completo$residuals)
+bptest(modelo_completo)
+
+# QUESTÃO 6: Seleção de variáveis
+modelo_reduzido <- step(modelo_completo, direction = "both")
+summary(modelo_reduzido)
+
+# Comparação
+AIC(modelo_completo, modelo_reduzido)
+BIC(modelo_completo, modelo_reduzido)
+
+# Pressupostos do modelo reduzido
+shapiro.test(modelo_reduzido$residuals)
+bptest(modelo_reduzido)
+```
+
+
